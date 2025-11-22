@@ -1,7 +1,7 @@
 /**
  * 電商結帳系統 - 前端互動邏輯
- * E-commerce Checkout System - Frontend JavaScript
- * 基於 web design etc 參考設計
+ * E-commerce Checkout System - Frontend JavaScript  
+ * Version 2.0: with Feature Toggle Support for COD
  */
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -72,30 +72,40 @@ document.addEventListener('DOMContentLoaded', function () {
             // 清除之前的訊息
             messageArea.innerHTML = '';
 
+            // 判斷當前選擇的付款方式
+            const activeCODTab = document.querySelector('.tab[data-target="cod"].active');
+            const paymentMethod = activeCODTab ? 'cod' : 'credit_card';
+
             // 取得表單資料
             const formData = new FormData(checkoutForm);
 
-            // 基本驗證
-            const cardNumber = formData.get('card_number').replace(/-/g, '');
-            const expiryDate = formData.get('expiry_date');
-            const cvv = formData.get('cvv');
+            // 加入付款方式到表單
+            formData.append('payment_method', paymentMethod);
 
-            // 驗證信用卡號 (至少 13 碼)
-            if (cardNumber.length < 13) {
-                showMessage('請輸入有效的信用卡號碼', 'error');
-                return;
-            }
+            // 只有信用卡付款需要驗證卡片資訊
+            if (paymentMethod === 'credit_card') {
+                // 基本驗證
+                const cardNumber = formData.get('card_number').replace(/-/g, '');
+                const expiryDate = formData.get('expiry_date');
+                const cvv = formData.get('cvv');
 
-            // 驗證到期日格式
-            if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-                showMessage('請輸入有效的到期日 (MM/YY)', 'error');
-                return;
-            }
+                // 驗證信用卡號 (至少 13 碼)
+                if (cardNumber.length < 13) {
+                    showMessage('請輸入有效的信用卡號碼', 'error');
+                    return;
+                }
 
-            // 驗證 CVV (3 碼)
-            if (cvv.length !== 3) {
-                showMessage('請輸入 3 碼 CVV 安全碼', 'error');
-                return;
+                // 驗證到期日格式
+                if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+                    showMessage('請輸入有效的到期日 (MM/YY)', 'error');
+                    return;
+                }
+
+                // 驗證 CVV (3 碼)
+                if (cvv.length !== 3) {
+                    showMessage('請輸入 3 碼 CVV 安全碼', 'error');
+                    return;
+                }
             }
 
             // 送出表單 (AJAX)
@@ -129,6 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const orderInfo = `
                         <div class="mt-3 p-3 bg-light rounded">
                             <strong>訂單編號:</strong> ${data.order.order_id}<br>
+                            <strong>付款方式:</strong> ${data.order.payment_method}<br>
                             <strong>付款金額:</strong> $${data.order.total}<br>
                             <strong>訂單狀態:</strong> ${data.order.status}
                         </div>
