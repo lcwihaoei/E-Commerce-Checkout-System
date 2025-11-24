@@ -1,0 +1,35 @@
+name: Dependency Audit
+
+on:
+  workflow_dispatch:        # 手動觸發
+  schedule:
+    - cron: "0 18 * * 1"    # 每週一台灣晚上 2:00 / UTC 18:00 之類（依實際調整）
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+
+    env:
+      # 如果你有私有 PyPI，要用 token 的話
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # 有私有 index 時可以這樣： --extra-index-url https://__token__:${PYPI_TOKEN}@pypi.my-company.com/simple
+          pip install -r requirements.txt
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit (fail on vulnerabilities)
+        run: pip-audit
