@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # 掃 Python 套件（requirements.txt）
+  - package-ecosystem: "pip"
+    directory: "/"          # requirements.txt 在 repo 根目錄
+    schedule:
+      interval: "weekly"    # 每週掃一次，可以改成 daily / monthly
+    allow:
+      - dependency-type: "all"   # production + dev 都一起管
